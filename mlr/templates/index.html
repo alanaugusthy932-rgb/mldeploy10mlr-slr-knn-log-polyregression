@@ -3,172 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - ML Predictor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>{{ title }} | ML Model Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FFB6C1; /* Light Pink */
-            --secondary: #FF69B4; /* Hot Pink */
-            --bg: #FFF5F7;
-            --card-bg: #FFFFFF;
-            --text: #4A4A4A;
-            --accent: #FF1493;
+            --bg-1: #081225;
+            --bg-2: #12345f;
+            --accent-1: #ff6b3d;
+            --accent-2: #0ec6b7;
+            --accent-3: #ffe6cf;
+            --text: #f4f7fb;
+            --text-soft: #b7c5d9;
+            --panel: rgba(5, 12, 24, 0.72);
+            --panel-border: rgba(255, 255, 255, 0.17);
+            --success-bg: rgba(14, 198, 183, 0.14);
+            --success-border: rgba(14, 198, 183, 0.65);
+            --error-bg: rgba(255, 107, 61, 0.16);
+            --error-border: rgba(255, 107, 61, 0.65);
+            --input-bg: rgba(255, 255, 255, 0.08);
+            --input-border: rgba(255, 255, 255, 0.22);
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Outfit', sans-serif;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Sora', sans-serif;
             min-height: 100vh;
-            padding: 20px;
+            color: var(--text);
+            background: radial-gradient(circle at 12% 20%, #184a84 0%, transparent 45%),
+                        radial-gradient(circle at 88% 82%, #2f1a4a 0%, transparent 40%),
+                        linear-gradient(150deg, var(--bg-1) 10%, var(--bg-2) 100%);
+            overflow-x: hidden;
         }
 
-        .container {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-            border: 2px solid var(--primary);
-            transition: transform 0.3s ease;
+        .ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .container:hover {
-            transform: translateY(-5px);
+        .ambient::before,
+        .ambient::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(12px);
+            opacity: 0.44;
+            animation: drift 10s ease-in-out infinite;
         }
 
-        h1 {
-            color: var(--secondary);
-            margin-bottom: 30px;
-            font-size: 2rem;
+        .ambient::before {
+            width: 220px;
+            height: 220px;
+            background: var(--accent-1);
+            left: -80px;
+            top: 42%;
+        }
+
+        .ambient::after {
+            width: 280px;
+            height: 280px;
+            background: var(--accent-2);
+            right: -110px;
+            top: 12%;
+            animation-delay: 1.7s;
+        }
+
+        .layout {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(260px, 0.95fr) minmax(320px, 1.05fr);
+            gap: 28px;
+            padding: 34px 20px;
+            align-items: center;
+        }
+
+        .intro,
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: rise 0.6s ease forwards;
+        }
+
+        .intro {
+            padding: 30px;
+            animation-delay: 0.1s;
+        }
+
+        .kicker {
+            font-size: 0.76rem;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            font-weight: 700;
+        }
+
+        .intro h1 {
+            margin-top: 12px;
+            font-family: 'Merriweather', serif;
+            font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            color: var(--text-soft);
+            margin-top: 14px;
+            line-height: 1.62;
+            font-size: 0.98rem;
+        }
+
+        .model-list {
+            margin-top: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tag {
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            color: var(--text-soft);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tag.active {
+            background: linear-gradient(120deg, rgba(14, 198, 183, 0.3), rgba(255, 107, 61, 0.24));
+            border-color: rgba(255, 255, 255, 0.52);
+            color: #ffffff;
             font-weight: 600;
         }
 
+        .panel {
+            padding: 30px;
+            animation-delay: 0.24s;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            margin-bottom: 22px;
+        }
+
         .input-group {
-            margin-bottom: 20px;
-            text-align: left;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 400;
-            color: var(--secondary);
+            font-size: 0.88rem;
+            color: var(--accent-3);
+            font-weight: 600;
+            letter-spacing: 0.02em;
         }
 
         input {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--primary);
             border-radius: 12px;
-            outline: none;
-            transition: border-color 0.3s;
-            font-size: 1rem;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text);
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        input::placeholder {
+            color: rgba(244, 247, 251, 0.55);
         }
 
         input:focus {
-            border-color: var(--secondary);
+            outline: none;
+            border-color: rgba(14, 198, 183, 0.9);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 3px rgba(14, 198, 183, 0.2);
         }
 
         button {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
+            margin-top: 8px;
+            border: 0;
+            border-radius: 13px;
+            padding: 13px;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #03111d;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.2);
+            background: linear-gradient(90deg, #22d4c2 0%, #ff8a47 100%);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
         }
 
         button:hover {
-            background: linear-gradient(135deg, var(--secondary), var(--accent));
-            transform: scale(1.02);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .result,
+        .error {
+            margin-top: 20px;
+            border-radius: 14px;
+            padding: 14px 16px;
+            animation: rise 0.45s ease;
         }
 
         .result {
-            margin-top: 30px;
-            padding: 20px;
-            background: var(--bg);
-            border-radius: 12px;
-            border-left: 5px solid var(--secondary);
-            text-align: left;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .result h3 {
-            color: var(--secondary);
-            margin-bottom: 5px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
         }
 
         .error {
-            color: #ff4d4d;
-            margin-top: 10px;
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+        }
+
+        .status-title {
+            font-size: 0.84rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-3);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .status-text {
+            line-height: 1.55;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 920px) {
+            .layout {
+                grid-template-columns: 1fr;
+                max-width: 700px;
+            }
+
+            .intro,
+            .panel {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .layout {
+                padding: 18px 14px 22px;
+                gap: 16px;
+            }
+
+            .intro,
+            .panel {
+                border-radius: 18px;
+                padding: 18px;
+            }
+        }
+
+        @keyframes rise {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes drift {
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-16px) scale(1.04);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>{{ title }}</h1>
-        <form action="/predict" method="post">
-            {% if title == "Simple Linear Regression" or title == "Polynomial Regression" %}
-                <div class="input-group">
-                    <label for="hours">Study Hours:</label>
-                    <input type="number" step="any" name="hours" id="hours" value="{{ hours }}" required placeholder="Enter study hours">
-                </div>
-            {% elif title == "Multiple Linear Regression" %}
-                <div class="input-group">
-                    <label for="hours">Study Hours:</label>
-                    <input type="number" step="any" name="hours" id="hours" value="{{ hours }}" required placeholder="Enter study hours">
-                </div>
-                <div class="input-group">
-                    <label for="attendance">Attendance (%):</label>
-                    <input type="number" step="any" name="attendance" id="attendance" value="{{ attendance }}" required placeholder="Enter attendance">
-                </div>
-            {% elif title == "Logistic Regression" or title == "KNN Classification" %}
-                <div class="input-group">
-                    <label for="hours">Study Hours:</label>
-                    <input type="number" step="any" name="hours" id="hours" value="{{ hours }}" required placeholder="Enter study hours">
-                </div>
-                <div class="input-group">
-                    <label for="sleep">Sleep Hours:</label>
-                    <input type="number" step="any" name="sleep" id="sleep" value="{{ sleep }}" required placeholder="Enter sleep hours">
+    {% set model_names = [
+        "Simple Linear Regression",
+        "Multiple Linear Regression",
+        "Polynomial Regression",
+        "Logistic Regression",
+        "KNN Classification"
+    ] %}
+
+    {% set descriptions = {
+        "Simple Linear Regression": "Estimate exam score from study hours using a single-feature regression model.",
+        "Multiple Linear Regression": "Estimate exam score from both study hours and attendance percentage.",
+        "Polynomial Regression": "Capture non-linear score trends from study hours with polynomial features.",
+        "Logistic Regression": "Predict PASS or FAIL with probability based on study and sleep hours.",
+        "KNN Classification": "Classify PASS or FAIL using nearest-neighbor behavior on study and sleep patterns."
+    } %}
+
+    <div class="ambient"></div>
+
+    <main class="layout">
+        <section class="intro">
+            <p class="kicker">Model Template Suite</p>
+            <h1>{{ title }}</h1>
+            <p class="subtitle">{{ descriptions.get(title, "Predict outcomes from your trained machine learning model.") }}</p>
+
+            <div class="model-list">
+                {% for model_name in model_names %}
+                    <span class="tag {% if model_name == title %}active{% endif %}">{{ model_name }}</span>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 class="section-title">Enter Inputs</h2>
+            <p class="section-subtitle">Provide the feature values and run prediction.</p>
+
+            <form action="/predict" method="post">
+                {% if title == "Simple Linear Regression" or title == "Polynomial Regression" %}
+                    <div class="input-group">
+                        <label for="hours">Study Hours</label>
+                        <input type="number" step="any" name="hours" id="hours" value="{{ hours|default('', true) }}" required placeholder="Example: 6.5">
+                    </div>
+                {% elif title == "Multiple Linear Regression" %}
+                    <div class="input-group">
+                        <label for="hours">Study Hours</label>
+                        <input type="number" step="any" name="hours" id="hours" value="{{ hours|default('', true) }}" required placeholder="Example: 7">
+                    </div>
+                    <div class="input-group">
+                        <label for="attendance">Attendance Percentage</label>
+                        <input type="number" step="any" name="attendance" id="attendance" value="{{ attendance|default('', true) }}" required placeholder="Example: 85">
+                    </div>
+                {% elif title == "Logistic Regression" or title == "KNN Classification" %}
+                    <div class="input-group">
+                        <label for="hours">Study Hours</label>
+                        <input type="number" step="any" name="hours" id="hours" value="{{ hours|default('', true) }}" required placeholder="Example: 6">
+                    </div>
+                    <div class="input-group">
+                        <label for="sleep">Sleep Hours</label>
+                        <input type="number" step="any" name="sleep" id="sleep" value="{{ sleep|default('', true) }}" required placeholder="Example: 7.5">
+                    </div>
+                {% endif %}
+
+                <button type="submit">Run Prediction</button>
+            </form>
+
+            {% if prediction_text %}
+                <div class="result">
+                    <div class="status-title">Prediction Result</div>
+                    <p class="status-text">{{ prediction_text }}</p>
                 </div>
             {% endif %}
-            
-            <button type="submit">Predict Now</button>
-        </form>
 
-        {% if prediction_text %}
-            <div class="result">
-                <h3>Prediction Result</h3>
-                <p>{{ prediction_text }}</p>
-            </div>
-        {% endif %}
-
-        {% if error %}
-            <p class="error">Error: {{ error }}</p>
-        {% endif %}
-    </div>
+            {% if error %}
+                <div class="error">
+                    <div class="status-title">Prediction Error</div>
+                    <p class="status-text">{{ error }}</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
 </body>
 </html>
+
